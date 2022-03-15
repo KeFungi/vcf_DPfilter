@@ -35,23 +35,27 @@ high_filter = [0] * n_sample  # records for high cuts
 low_filter = [0] * n_sample  # records for low cuts
 n_site = 0
 for record in vcf_reader:
-    # skip non-snp site if --snps
-    if args.snps:
-        if not record.is_snp:
-            continue
-        elif '*' in record.alleles:
-            continue
+    # skip is all not called
+    if record.num_called == 0:
+        continue
 
     # skip non-variant sites unless --nonvariant
     if not args.nonvariant:
         if record.num_hom_ref == record.num_called:
             continue
 
+    # skip non-snp site if --snps
+    if args.snps:
+        if not record.is_snp:
+            continue
+        elif '*' in record.alleles:
+            continue
+    
     new_CallData = namedtuple('CallData', record.FORMAT.split(':'))  # default FORMAT field
+    n_site = n_site + 1
     for sample in sample_ind:
         # if not missing
-        if record.samples[sample].data.DP is not None and record.samples[sample].data.GT != './.' and record.samples[sample].data.GT != '.|.':
-            n_site = n_site + 1
+        if record.samples[sample].called:
             # if meets high cutoff
             if record.samples[sample].data.DP > high_bonds[sample]:
                 # make new Call object
