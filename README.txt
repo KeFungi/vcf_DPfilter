@@ -1,3 +1,6 @@
+vcf_DPfilter.py
+filter genotype DP in .vcf with customized cutoff of each sample/individual
+
 usage: vcf_DPfilter.py [-h] [-i input.vcf.gz] [-o output.vcf.gz]
                        [-c cutout.tsv] [--snps] [--nonvariant]
 
