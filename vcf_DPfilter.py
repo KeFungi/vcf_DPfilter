@@ -1,6 +1,5 @@
 import argparse
 import pandas as pd
-import numpy as np
 import vcf
 import Bio.bgzf
 from collections import namedtuple
@@ -15,7 +14,6 @@ parser.add_argument("--nonvariant", help="include non-variable sites", action='s
 
 # args = parser.parse_args(['-i', 'input.vcf.gz', '-o', 'output.vcf.gz', '-c', 'cutout.tsv', '--snps'])
 args = parser.parse_args()
-
 
 # setup IO
 DP_cut = pd.read_csv(args.c, sep='\t', header=None)
@@ -33,8 +31,9 @@ high_bonds = DP_cut_ordered.iloc[:, 1].tolist()
 
 # iter over sites
 missing_gt = './.'
-high_filters = []  # collector of records of high cuts
-low_filters = []  # collector of records of low cuts
+high_filter = [0] * n_sample  # records for high cuts
+low_filter = [0] * n_sample  # records for low cuts
+n_site = 0
 for record in vcf_reader:
     # skip non-snp site if --snps
     if args.snps:
@@ -49,11 +48,10 @@ for record in vcf_reader:
             continue
 
     new_CallData = namedtuple('CallData', record.FORMAT.split(':'))  # default FORMAT field
-    row_high_filter = [False] * n_sample  # records for high cuts this site
-    row_low_filter = [False] * n_sample  # records for low cuts this site
     for sample in sample_ind:
         # if not missing
         if record.samples[sample].data.DP is not None and record.samples[sample].data.GT != './.' and record.samples[sample].data.GT != '.|.':
+            n_site = n_site + 1
             # if meets high cutoff
             if record.samples[sample].data.DP > high_bonds[sample]:
                 # make new Call object
@@ -61,7 +59,7 @@ for record in vcf_reader:
                 record.samples[sample].data = new_CallData(*calldata)
                 record.samples[sample].called = False
                 # record high cut
-                row_high_filter[sample] = True
+                high_filter[sample] = high_filter[sample] + 1
             # if meets low cutoff
             if record.samples[sample].data.DP < low_bonds[sample]:
                 # make new Call object
@@ -69,10 +67,7 @@ for record in vcf_reader:
                 record.samples[sample].data = new_CallData(*calldata)
                 record.samples[sample].called = False
                 # record high cut
-                row_low_filter[sample] = True
-    # append site cut records
-    high_filters.append(row_high_filter)
-    low_filters.append(row_low_filter)
+                low_filter[sample] = low_filter[sample] + 1
 
     # skip non-variant sites unless --nonvariant
     if not args.nonvariant:
@@ -85,22 +80,19 @@ for record in vcf_reader:
 
 bgzip_output.close()  # end file
 
-# summarise cut conuts
-ind_high_filter = [filtered/len(high_filters) for filtered in np.array(high_filters).sum(axis=0)]
-ind_low_filter = [filtered/len(low_filters) for filtered in np.array(low_filters).sum(axis=0)]
-either_filter= [filtered/len(high_filters) for filtered in np.logical_or(np.array(high_filters), np.array(low_filters)).sum(axis=0)]
+# summarise cut rate
+sum_high_filter = [cut/n_site for cut in high_filter]
+sum_low_filter = [cut/n_site for cut in low_filter]
 
 # print stats to std
 sample_IDs.insert(0, "INDV")
 low_bonds.insert(0, "low_Cutoff")
 high_bonds.insert(0, "high_Cutoff")
-ind_high_filter.insert(0, "high_CutRate")
-ind_low_filter.insert(0, "low_CutRate")
-either_filter.insert(0, "total_CutRate")
+sum_high_filter.insert(0, "high_CutRate")
+sum_low_filter.insert(0, "low_CutRate")
 
 print('\t'.join(map(str, sample_IDs)))
 print('\t'.join(map(str, low_bonds)))
 print('\t'.join(map(str, high_bonds)))
-print('\t'.join(map(str, ind_high_filter)))
-print('\t'.join(map(str, ind_low_filter)))
-print('\t'.join(map(str, either_filter)))
+print('\t'.join(map(str, sum_high_filter)))
+print('\t'.join(map(str, sum_low_filter)))
