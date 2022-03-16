@@ -50,7 +50,7 @@ for record in vcf_reader:
             continue
         elif '*' in record.alleles:
             continue
-    
+
     new_CallData = namedtuple('CallData', record.FORMAT.split(':'))  # default FORMAT field
     n_site = n_site + 1
     for sample in sample_ind:

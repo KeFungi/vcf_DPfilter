@@ -3,6 +3,7 @@ import vcf
 import re
 import os
 
+
 def amb_convert(base):
     ambiguities = {"AA": "A", "TT": "T", "CC": "C", "GG": "G",
                    "AT": "W", "TA": "W", "AC": "M", "CA": "M",
@@ -24,8 +25,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-i", metavar='input.vcf.gz', help="input vcf.gz file", type=str)
 parser.add_argument("-o", metavar='out.phy', help="output phylip file", type=str)
 parser.add_argument("--snps", help="ignore non-snp sites", action='store_true')
+parser.add_argument("--skip-check", help="skip SNP, missing, invariable checks", action='store_true')
 
-#args = parser.parse_args(['-i', 'input.vcf.gz', '-o', 'out.phy', '--snps'])
+#args = parser.parse_args(['-i', 'input.vcf.gz', '-o', 'out.phy', '--snps', '--skip-check'])
 args = parser.parse_args()
 
 # setup IO
@@ -41,22 +43,24 @@ sample_ind = range(n_sample)
 n_site=0
 
 for record in vcf_reader:
-    # skip MNP
-    if not record.is_snp:
-        continue
 
-    # skip DELETION
-    if args.snps:
-        if '*' in record.alleles:
+    if not args.skip_check:
+        # skip MNP
+        if not record.is_snp:
             continue
 
-    # skip all missing site
-    if record.num_called == 0:
-        continue
+        # skip DELETION
+        if args.snps:
+            if '*' in record.alleles:
+                continue
 
-    # skip invariable site
-    if record.nucl_diversity == 0:
-        continue
+        # skip all missing site
+        if record.num_called == 0:
+            continue
+
+        # skip invariable site
+        if record.nucl_diversity == 0:
+            continue
 
     site_seq = ''
     n_site = n_site + 1
@@ -70,7 +74,7 @@ temp_output.close()
 
 ## read .tmp file and write .phy
 output = open(args.o, "w")
-output.writelines(' ' + str(n_sample) + ' ' + str(n_site) + '\n')
+output.writelines(f' {n_sample} {n_site}\n')
 
 for sample in sample_ind:
     sample_seq = ''
