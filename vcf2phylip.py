@@ -1,6 +1,7 @@
 import argparse
 import vcf
 import re
+import os
 
 def amb_convert(base):
     ambiguities = {"AA": "A", "TT": "T", "CC": "C", "GG": "G",
@@ -8,7 +9,7 @@ def amb_convert(base):
                    "AG": "R", "GA": "R", "TC": "Y", "CT": "Y",
                    "TG": "K", "GT": "K", "CG": "S", "GC": "S",
                    "..": "N"}
-    return ambiguities.get(base)
+    return ambiguities[base]
 
 
 def consensus_from_gt(gt_bases):
@@ -80,4 +81,5 @@ for sample in sample_ind:
     output.writelines(out_line + '\n')
 
 temp_input.close()
+os.remove(args.o + '.tmp')
 output.close()
