@@ -34,12 +34,6 @@ high_filter = [0] * n_sample  # records for high cuts
 low_filter = [0] * n_sample  # records for low cuts
 n_site = 0
 for record in vcf_reader:
-    # skip if all not called or invariable
-    if record.num_called == 0:
-        continue
-    if record.heterozygosity == 0:
-        continue
-
     # skip non-snp site if --snps
     if args.snps:
         if not record.is_snp:
