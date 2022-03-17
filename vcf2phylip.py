@@ -28,14 +28,13 @@ def consensus_from_gt(gt_bases):
 
 # parse arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", metavar='input.vcf.gz', help="input vcf.gz file", type=str)
-parser.add_argument("-o", metavar='out.phy', help="output phylip file", type=str)
-parser.add_argument("--snps", help="ignore non-snp sites (any \'*\' deletion in VCF4.2)", action='store_true')
+parser.add_argument("-i", metavar='input.vcf.gz', help="input vcf.gz file", type=str, required=True)
+parser.add_argument("-o", metavar='out.phy', help="output phylip file", type=str, required=True)
 parser.add_argument("--remove-raxml-invar", help="remove sites consider invariable when using --asc-corr in RAxML", action='store_true')
 parser.add_argument("--skip-check", help="skip SNP, missing, invariable checks; override --snps", action='store_true')
 parser.add_argument("--recode-vcf", metavar="out.vcf.gz", help="make new .vcf according to filtered sites")
 
-# args = parser.parse_args(['-i', 'input.vcf.gz', '-o', 'out.phy', '--skip-check', '--remove-raxml-invar'])
+# args = parser.parse_args(['-i', 'input.vcf.gz', '-o', 'out.phy', '--remove-raxml-invar'])
 args = parser.parse_args()
 
 # setup IO
@@ -54,17 +53,16 @@ n_site=0
 for record in vcf_reader:
     # whether conduct site checks
     if not args.skip_check:
+        # skip all missing site
+        if record.num_called == 0:
+            continue
+
         # skip MNP
         if not record.is_snp:
             continue
 
         # skip DELETION
-        if args.snps:
-            if '*' in record.alleles:
-                continue
-
-        # skip all missing site
-        if record.num_called == 0:
+        if '*' in record.alleles:
             continue
 
         # skip invariable site

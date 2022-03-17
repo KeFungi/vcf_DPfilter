@@ -6,11 +6,10 @@ from collections import namedtuple
 
 # parse arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", metavar='input.vcf.gz', help="input vcf.gz file", type=str)
-parser.add_argument("-o", metavar='output.vcf.gz', help="output vcf.gz file", type=str)
-parser.add_argument("-c", metavar='cutout.tsv', help="cutoff tsv file; columns=sample, low cutoff, high cutoff", type=str)
+parser.add_argument("-i", metavar='input.vcf.gz', help="input vcf.gz file", type=str, required=True)
+parser.add_argument("-o", metavar='output.vcf.gz', help="output vcf.gz file", type=str, required=True)
+parser.add_argument("-c", metavar='cutout.tsv', help="cutoff tsv file; columns=sample, low cutoff, high cutoff", type=str, required=True)
 parser.add_argument("--snps", help="ignore non-snp sites", action='store_true')
-parser.add_argument("--nonvariant", help="include non-variable sites", action='store_true')
 
 # args = parser.parse_args(['-i', 'input.vcf.gz', '-o', 'output.vcf.gz', '-c', 'cutout.tsv', '--snps'])
 args = parser.parse_args()
@@ -35,14 +34,11 @@ high_filter = [0] * n_sample  # records for high cuts
 low_filter = [0] * n_sample  # records for low cuts
 n_site = 0
 for record in vcf_reader:
-    # skip is all not called
+    # skip if all not called or invariable
     if record.num_called == 0:
         continue
-
-    # skip non-variant sites unless --nonvariant
-    if not args.nonvariant:
-        if record.num_hom_ref == record.num_called:
-            continue
+    if record.nucl_diversity == 0:
+        continue
 
     # skip non-snp site if --snps
     if args.snps:
@@ -70,17 +66,16 @@ for record in vcf_reader:
                 calldata = [missing_gt] + list(record.samples[sample].data[1:])
                 record.samples[sample].data = new_CallData(*calldata)
                 record.samples[sample].called = False
-                # record high cut
+                # record low cut
                 low_filter[sample] = low_filter[sample] + 1
 
-    # skip non-variant sites unless --nonvariant
-    if not args.nonvariant:
-        if record.num_hom_ref == record.num_called:
-            continue
+    # skip if all not called or invariable
+    if record.num_called == 0:
+        continue
+    if record.nucl_diversity == 0:
+        continue
 
-    # write site if not all missing
-    if record.num_called > 0:
-        vcf_writer.write_record(record)
+    vcf_writer.write_record(record)
 
 bgzip_output.close()  # end file
 

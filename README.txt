@@ -1,14 +1,29 @@
 vcf_DPfilter.py
 filter genotype DP in .vcf with customized cutoff of each sample/individual
 
-usage: vcf_DPfilter.py [-h] [-i input.vcf.gz] [-o output.vcf.gz]
-                       [-c cutout.tsv] [--snps] [--nonvariant]
+usage: vcf_DPfilter.py [-h] -i input.vcf.gz -o output.vcf.gz -c cutout.tsv
+                       [--snps]
 
 optional arguments:
   -h, --help        show this help message and exit
   -i input.vcf.gz   input vcf.gz file
   -o output.vcf.gz  output vcf.gz file
-  -c cutout.tsv     cutoff tsv file; columns=sample_ID, low cutoff, high cutoff
+  -c cutout.tsv     cutoff tsv file; columns=sample, low cutoff, high cutoff
   --snps            ignore non-snp sites
-  --nonvariant      include non-variable sites
-  
+
+
+vcf2phylip.py
+make relaxed phylip from vcf file
+
+usage: vcf2phylip.py [-h] -i input.vcf.gz -o out.phy [--remove-raxml-invar]
+                     [--skip-check] [--recode-vcf out.vcf.gz]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i input.vcf.gz       input vcf.gz file
+  -o out.phy            output phylip file
+  --remove-raxml-invar  remove sites consider invariable when using --asc-corr
+                        in RAxML
+  --skip-check          skip SNP, missing, invariable checks; override --snps
+  --recode-vcf out.vcf.gz
+                        make new .vcf according to filtered sites 
