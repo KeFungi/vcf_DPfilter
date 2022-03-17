@@ -37,7 +37,7 @@ for record in vcf_reader:
     # skip if all not called or invariable
     if record.num_called == 0:
         continue
-    if record.nucl_diversity == 0:
+    if record.heterozygosity == 0:
         continue
 
     # skip non-snp site if --snps
@@ -72,7 +72,7 @@ for record in vcf_reader:
     # skip if all not called or invariable
     if record.num_called == 0:
         continue
-    if record.nucl_diversity == 0:
+    if record.heterozygosity == 0:
         continue
 
     vcf_writer.write_record(record)

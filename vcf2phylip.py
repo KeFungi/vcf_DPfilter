@@ -66,7 +66,7 @@ for record in vcf_reader:
             continue
 
         # skip invariable site
-        if record.nucl_diversity == 0:
+        if record.heterozygosity == 0:
             continue
 
     # make site sequence
