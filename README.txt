@@ -26,4 +26,19 @@ optional arguments:
                         in RAxML
   --skip-check          skip SNP, missing, invariable checks; override --snps
   --recode-vcf out.vcf.gz
-                        make new .vcf according to filtered sites 
+                        make new .vcf according to filtered sites
+
+ref_ascbias.py 
+make raxml ascertainment bias from fasta and variable (.vcf) sites
+
+usage: ref_ascbias.py [-h] [-i input.fasta] [-s site.txt] [-p PREFIX]
+                      [--include-masked]
+
+optional arguments:
+  -h, --help        show this help message and exit
+  -i input.fasta    input .fasta file
+  -s site.txt       tab-separated CHROM POS, each site per line
+  -p PREFIX         output prefix
+  --include-masked  include lowercase masked regions
+
+ 
